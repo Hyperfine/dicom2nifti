@@ -36,6 +36,6 @@ def main(mode):
 
 
 if __name__ == '__main__':
-    #main('yale_lowfield')
-    #main('yale_highfield')
+    main('yale_lowfield')
+    main('yale_highfield')
     main('hoppr_highfield')
