@@ -1,5 +1,19 @@
 =============
- dicom2nifti
+Hyperfine dicom to nifti converter based on the following package
+=============
+---------------
+ Hyperfine specific quickstart examples
+---------------
+
+
+.. code-block:: bash
+
+   python scripts/quickstart_hyperfine.py
+
+
+
+=============
+ dicom2nifti original documentation starting
 =============
 
 Python library for converting dicom files to nifti
