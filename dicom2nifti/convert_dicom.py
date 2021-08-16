@@ -116,8 +116,6 @@ def dicom_array_to_nifti(dicom_list, output_file, reorient_nifti=True):
     vendor = _get_vendor(dicom_list)
     if vendor == Vendor.GENERIC:
         results = convert_generic.dicom_to_nifti(dicom_list, output_file)
-    elif vendor == Vendor.HYPERFINE:
-        results = convert_philips.dicom_to_nifti(dicom_list, output_file)
     elif vendor == Vendor.SIEMENS:
         results = convert_siemens.dicom_to_nifti(dicom_list, output_file)
     elif vendor == Vendor.GE:

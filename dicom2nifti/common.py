@@ -7,6 +7,7 @@ dicom2nifti
 import dicom2nifti.compressed_dicom as compressed_dicom
 
 import os
+import json
 import struct
 
 from pydicom.tag import Tag
@@ -14,6 +15,7 @@ from pydicom.tag import Tag
 import logging
 import numpy
 
+import pydicom
 from dicom2nifti.exceptions import ConversionValidationError, ConversionError
 import dicom2nifti.settings
 
@@ -22,6 +24,74 @@ logger = logging.getLogger(__name__)
 
 # Disable false positive numpy errors
 # pylint: disable=E1101
+
+
+def convert_dicom_value(val, pixel_reader="pydicom"):
+    """
+    Returns 'val' converted from a dicom-specific representation
+    to a python primitive type.
+
+    known issues with pydicom:
+    - ValueError: invalid literal for int() with base 10
+    """
+
+    if isinstance(val, pydicom.valuerep.IS):
+        return int(val)
+    elif isinstance(val, pydicom.valuerep.DSfloat):
+        return float(val)
+    elif isinstance(val, pydicom.multival.MultiValue):
+        return list(map(lambda x: convert_dicom_value(x, pixel_reader), val))
+    elif isinstance(val, pydicom.tag.BaseTag):
+        return {"group": val.group,
+                "element": val.element}
+    elif isinstance(val, pydicom.dataset.Dataset):
+        res = {}
+        for key in val.dir():
+            if key == "PixelData":
+                if pixel_reader is None:
+                    pass
+                elif pixel_reader == "pydicom":
+                    res[key] = val.pixel_array
+                else:
+                    raise ValueError("Unknown pixel_reader value: {}"
+                                     .format(pixel_reader))
+            else:
+                try:
+                    data_element = val.data_element(key)
+                except Exception as e:
+                    # handle case of:
+                    # "invalid literal for int() with base 10: '5.000000'"
+                    if re.match(r"^invalid literal for int\(\) with base 10: '\d+.0*'$",
+                                str(e)):
+                        # TODO parse float value out
+                        continue
+                    else:
+                        raise e
+                if data_element is not None:
+                    res[key] = convert_dicom_value(data_element.value,
+                                                   pixel_reader)
+                else:
+                    res[key] = None
+        return res
+    elif isinstance(val, numpy.ndarray):
+        return val
+    # need to check the dicom values before these, because the dicom values
+    # are subclasses
+    elif isinstance(val, (int, float, str)):
+        return val
+    elif isinstance(val, list):
+        return list(map(lambda x: convert_dicom_value(x, pixel_reader), val))
+    else:
+        # pydicom.uid.UID
+        # pydicom.valuerep.PersonNameUnicode
+        return str(val)
+
+
+def dump_json(data, path):
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+
 def read_dicom_directory(dicom_directory, stop_before_pixels=False):
     """
     Read all dicom files in a given directory (stop before pixels)

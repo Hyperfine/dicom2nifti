@@ -19,7 +19,7 @@ import logging
 import dicom2nifti.common as common
 import dicom2nifti.convert_dicom as convert_dicom
 import dicom2nifti.settings
-from experimental import utils
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -133,11 +133,11 @@ def convert_directory(
             # record dicom tags in json
             json_out = {'dicoms': [], 'nifti': nifti_file}
             for dicom, dicom_file_path in zip(dicom_input, dicom_file_paths):
-                dicom = utils.convert_dicom_value(dicom)
+                dicom = common.convert_dicom_value(dicom)
                 dicom.pop('PixelData')
                 dicom.update({'dicom_file_path': dicom_file_path})
                 json_out['dicoms'].append(dicom)
-            utils.dump_json(
+            common.dump_json(
                 json_out,
                 os.path.join(
                     output_folder,
@@ -161,7 +161,7 @@ def _is_valid_imaging_dicom(dicom_header):
     # if it is philips and multiframe dicom then we assume it is ok
     try:
         if common.is_hyperfine([dicom_header]):
-            return True
+            return False
 
         if common.is_philips([dicom_header]):
             if common.is_multiframe_dicom([dicom_header]):
