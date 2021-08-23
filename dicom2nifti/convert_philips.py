@@ -22,6 +22,7 @@ from dicom2nifti.exceptions import ConversionError, ConversionValidationError
 pydicom_config.enforce_valid_values = False
 logger = logging.getLogger(__name__)
 
+
 def dicom_to_nifti(dicom_input, output_file=None):
     """
     This is the main dicom to nifti conversion fuction for philips images.
